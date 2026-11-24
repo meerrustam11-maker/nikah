@@ -1,0 +1,35 @@
+  var $=function(i){return document.getElementById(i)};
+  $("dateText").textContent=CFG.dateText;$("timeText").textContent=CFG.timeText;
+  $("venueName").textContent=CFG.venueName;$("venueAddr").textContent=CFG.venueAddr;
+  $("mapBtn").href=CFG.MAP_URL||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(CFG.mapQuery));
+  var msg="You are invited to the Nikah of "+CFG.groom+" & "+CFG.bride+" on "+CFG.dateText+" at "+CFG.timeText+", "+CFG.venueName+".";
+  $("rsvp").href="https://wa.me/"+CFG.PHONE+"?text="+encodeURIComponent("Assalamu alaikum, I will attend the Nikah of "+CFG.groom+" & "+CFG.bride+".");
+  $("share").addEventListener("click",function(){
+    var url=location.href;
+    if(navigator.share){navigator.share({title:"Nikah Invitation",text:msg,url:url}).catch(function(){})}
+    else{window.open("https://wa.me/?text="+encodeURIComponent(msg+"\n"+url),"_blank")}
+  });
+  /* seal shape */
+  var b="",N=30;for(var i=0;i<N;i++){var a=i/N*6.2832,r=40+Math.sin(i*2.3)*1.7+(i%3)*.8;b+=(i?"L":"M")+(Math.cos(a)*r).toFixed(1)+" "+(Math.sin(a)*r).toFixed(1)}
+  $("blob").setAttribute("d",b+"Z");
+  /* optional intro video */
+  if(CFG.INTRO_VIDEO){var v=document.createElement("video");v.src=CFG.INTRO_VIDEO;v.muted=true;v.loop=true;v.autoplay=true;v.playsInline=true;
+    $("intro").insertBefore(v,$("intro").firstChild);document.querySelector(".seal").style.display="none";
+    v.addEventListener("error",function(){v.remove();document.querySelector(".seal").style.display=""})}
+  $("open").addEventListener("click",function(e){e.preventDefault();$("intro").classList.add("go");
+    setTimeout(function(){$("bismillah").scrollIntoView({behavior:"smooth"})},450)});
+  /* countdown */
+  var t=new Date(CFG.dateISO).getTime();
+  function tick(){var d=t-Date.now(),el=$("cd");if(isNaN(t)||d<=0){el.style.display="none";return}
+    var D=Math.floor(d/864e5),H=Math.floor(d/36e5)%24,M=Math.floor(d/6e4)%60;
+    el.innerHTML="<div><b>"+D+"</b><span>days</span></div><div><b>"+H+"</b><span>hours</span></div><div><b>"+M+"</b><span>mins</span></div>"}
+  tick();setInterval(tick,30000);
+  /* gentle reveal on scroll */
+  var els=document.querySelectorAll(".fade");
+  if("IntersectionObserver" in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.15});
+    els.forEach(function(e){io.observe(e)})}else{els.forEach(function(e){e.classList.add("in")})}
+})();
+</script>
+</body>
+                                     </html>
+    
