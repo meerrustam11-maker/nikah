@@ -15,13 +15,15 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;font-size:19px;line-height:1.6;text-align:center}
+body.locked{overflow:hidden;height:100vh;height:100svh}
+body.locked section:not(#intro),body.locked footer{display:none}
 section{max-width:480px;margin:0 auto;padding:56px 28px}
-#intro{position:relative;min-height:100vh;min-height:100svh;max-width:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;overflow:hidden;
+#intro{position:relative;min-height:100vh;min-height:100svh;max-width:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:22px;overflow:hidden;padding-bottom:max(48px,env(safe-area-inset-bottom,0px));
 background:radial-gradient(80% 60% at 50% 45%,#fffaf0,#e4d6bb);color:#3b3024}
 #intro video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.seal{width:44vmin;max-width:210px;filter:drop-shadow(0 8px 7px rgba(50,30,10,.4));transition:transform 1.2s ease,opacity 1.2s ease}
-#intro.go .seal{transform:scale(1.5) rotate(-8deg);opacity:0}
-#intro .in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:20px}
+.seal{position:absolute;left:50%;top:42%;width:44vmin;max-width:210px;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 7px rgba(50,30,10,.4))}
+#intro .in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;transition:opacity .6s ease}
+#intro.go .in{opacity:0;pointer-events:none}
 .script{font-family:"Great Vibes","Snell Roundhand",cursive;font-size:clamp(46px,14vw,72px);line-height:1.05;margin:0;font-weight:400}
 .btn{display:inline-block;font:inherit;font-size:18px;font-weight:600;color:#fff;background:var(--green);border:1px solid var(--green);border-radius:999px;padding:11px 26px;text-decoration:none;cursor:pointer}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn{color:#14221e}}
@@ -41,19 +43,18 @@ h2{font-weight:400;font-style:italic;font-size:30px;margin:0 0 .3em;color:var(--
 .fade{opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease}
 .fade.in{opacity:1;transform:none}
 footer{padding:36px 28px calc(36px + env(safe-area-inset-bottom,0px));font-size:15px;color:var(--soft)}
-@media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}.seal{transition:none}html{scroll-behavior:auto}}
+@media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
 </style>
 </head>
-<body>
+<body class="locked">
 
 <section id="intro" aria-label="Opening">
+  <svg class="seal" id="seal" viewBox="-50 -50 100 100" aria-hidden="true">
+    <path id="blob" fill="#a98337"/>
+    <circle r="31" fill="none" stroke="#efd9a0" stroke-opacity=".65" stroke-width="1.3"/>
+    <text x="0" y="10" text-anchor="middle" font-family="Great Vibes,cursive" font-size="30" fill="#6d5120" stroke="#f1dca5" stroke-opacity=".6" stroke-width=".5">A&amp;M</text>
+  </svg>
   <div class="in">
-    <svg class="seal" viewBox="-50 -50 100 100" aria-hidden="true">
-      <defs><radialGradient id="g" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#e3c98a"/><stop offset=".55" stop-color="#a98337"/><stop offset="1" stop-color="#6e5120"/></radialGradient></defs>
-      <path id="blob" fill="#a98337"/>
-      <circle r="31" fill="none" stroke="#efd9a0" stroke-opacity=".65" stroke-width="1.3"/>
-      <text x="0" y="10" text-anchor="middle" font-family="Great Vibes,cursive" font-size="30" fill="#6d5120" stroke="#f1dca5" stroke-opacity=".6" stroke-width=".5">A&amp;M</text>
-    </svg>
     <p class="small" style="color:#6b5c49">You are invited</p>
     <a class="btn" href="#bismillah" id="open">Tap to open</a>
   </div>
@@ -113,9 +114,7 @@ var CFG={
 /* ====================== */
 (function(){
   var $=function(i){return document.getElementById(i)};
-  var note=document.querySelector("#intro .small");
-  var seal=document.querySelector(".seal");
-  note.textContent="You are invited (loading video...)";
+  var seal=$("seal"),vid=null,failed=false,revealed=false;
   $("dateText").textContent=CFG.dateText;$("timeText").textContent=CFG.timeText;
   $("venueName").textContent=CFG.venueName;$("venueAddr").textContent=CFG.venueAddr;
   $("mapBtn").href=CFG.MAP_URL||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(CFG.mapQuery));
@@ -128,28 +127,42 @@ var CFG={
   });
   var b="",N=30;for(var i=0;i<N;i++){var a=i/N*6.2832,r=40+Math.sin(i*2.3)*1.7+(i%3)*.8;b+=(i?"L":"M")+(Math.cos(a)*r).toFixed(1)+" "+(Math.sin(a)*r).toFixed(1)}
   $("blob").setAttribute("d",b+"Z");
+
   if(CFG.INTRO_VIDEO){
-    var v=document.createElement("video");
-    v.muted=true;v.defaultMuted=true;v.loop=true;v.playsInline=true;v.preload="auto";
-    v.setAttribute("muted","");v.setAttribute("playsinline","");
-    v.addEventListener("playing",function(){seal.style.display="none";note.textContent="You are invited"});
-    v.addEventListener("error",function(){note.textContent="You are invited (video error "+(v.error?v.error.code:"?")+")"});
-    v.src=CFG.INTRO_VIDEO;
-    $("intro").insertBefore(v,$("intro").firstChild);
-    var p=v.play();if(p&&p.catch)p.catch(function(){});
+    vid=document.createElement("video");
+    vid.muted=true;vid.defaultMuted=true;vid.loop=false;vid.playsInline=true;vid.preload="auto";
+    vid.setAttribute("muted","");vid.setAttribute("playsinline","");
+    vid.addEventListener("loadeddata",function(){if(!failed)seal.style.display="none"});
+    vid.addEventListener("error",function(){failed=true;seal.style.display=""});
+    vid.src=CFG.INTRO_VIDEO+"#t=0.1";
+    $("intro").insertBefore(vid,$("intro").firstChild);
   }
+
+  function reveal(){
+    if(revealed)return;revealed=true;
+    document.body.classList.remove("locked");
+    setTimeout(function(){$("bismillah").scrollIntoView({behavior:"smooth"})},60);
+  }
+
   $("open").addEventListener("click",function(e){
     e.preventDefault();
-    var vv=document.querySelector("#intro video");
-    if(vv){var q=vv.play();if(q&&q.catch)q.catch(function(){})}
     $("intro").classList.add("go");
-    setTimeout(function(){$("bismillah").scrollIntoView({behavior:"smooth"})},450);
+    if(vid&&!failed){
+      vid.addEventListener("ended",function(){setTimeout(reveal,500)});
+      var p=vid.play();
+      if(p&&p.catch)p.catch(function(){reveal()});
+      setTimeout(function(){if(vid.currentTime<0.2)reveal()},4000);
+    }else{
+      setTimeout(reveal,900);
+    }
   });
+
   var t=new Date(CFG.dateISO).getTime();
   function tick(){var d=t-Date.now(),el=$("cd");if(isNaN(t)||d<=0){el.style.display="none";return}
     var D=Math.floor(d/864e5),H=Math.floor(d/36e5)%24,M=Math.floor(d/6e4)%60;
     el.innerHTML="<div><b>"+D+"</b><span>days</span></div><div><b>"+H+"</b><span>hours</span></div><div><b>"+M+"</b><span>mins</span></div>"}
   tick();setInterval(tick,30000);
+
   var els=document.querySelectorAll(".fade");
   if("IntersectionObserver" in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.15});
     els.forEach(function(e){io.observe(e)})}else{els.forEach(function(e){e.classList.add("in")})}
